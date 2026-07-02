@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install "git+https://github.com/zhangsan640407/citation-key-auditor.git@v0.2.0"
+      - run: python -m pip install "git+https://github.com/zhangsan640407/citation-key-auditor.git@v0.3.0"
       - run: citation-key-audit check manuscript.md references.bib
 ```
 
@@ -37,8 +37,8 @@ The final step returns a non-zero exit code when cited keys are missing from the
 BibTeX file, so the GitHub Actions job fails. Missing-key diagnostics include
 the manuscript line numbers where the keys were cited.
 
-For versions that include multi-file support, pass each manuscript file before
-the BibTeX file. Multi-file diagnostics include both file names and line numbers:
+Pass each manuscript file before the BibTeX file. Multi-file diagnostics include
+both file names and line numbers:
 
 ```yaml
 - run: citation-key-audit check intro.md methods.md results.md references.bib
