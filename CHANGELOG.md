@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+## 0.3.0
+
 - Added support for checking multiple manuscript files in one command.
 - Added support for checking citations against multiple BibTeX files.
 - Added duplicate BibTeX key diagnostics with source file names.
 - Added file-aware citation source metadata for JSON output.
 - Added file-aware missing-key diagnostics for multi-file text output.
 - Added `bibtex_sources` and `duplicate_bibtex_keys` fields to JSON output.
+- Added a privacy-preserving validation record based on real academic data.
 
 ## 0.2.0
 
