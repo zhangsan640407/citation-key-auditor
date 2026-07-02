@@ -10,11 +10,11 @@ was created. Use the GitHub website or install `gh` before publishing.
 3. From this local repository, run:
 
 ```powershell
-git remote add origin https://github.com/YOUR-USERNAME/citation-key-auditor.git
+git remote add origin https://github.com/zhangsan640407/citation-key-auditor.git
 git push -u origin main
 ```
 
-4. Replace `YOUR-USERNAME` in `pyproject.toml` after the remote URL is known.
+4. Confirm the project URLs in `pyproject.toml` match the remote repository.
 
 ## Option B: GitHub CLI
 
