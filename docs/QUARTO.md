@@ -44,6 +44,7 @@ Grouped citations are also supported [@lee2023; @garcia2022].
 
 Citation Key Auditor reads the `.qmd` file and reports whether `smith2024`,
 `lee2023`, and `garcia2022` exist in the BibTeX file passed to the command.
+Missing keys include the source line numbers where they were cited.
 
 ## Current limitations
 
@@ -52,7 +53,6 @@ Citation Key Auditor reads the `.qmd` file and reports whether `smith2024`,
 - Pass the `.qmd` file and `.bib` file explicitly.
 - Multi-file manuscript projects are not supported yet.
 - Multiple BibTeX files are not supported yet.
-- Diagnostics do not include line numbers yet.
 
 These limitations are tracked in open issues so they can be improved without
 changing the current command behavior unexpectedly.

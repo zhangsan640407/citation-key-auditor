@@ -34,7 +34,9 @@ jobs:
 ```
 
 The final step returns a non-zero exit code when cited keys are missing from the
-BibTeX file, so the GitHub Actions job fails.
+BibTeX file, so the GitHub Actions job fails. Missing-key diagnostics include
+the manuscript line numbers where the keys were cited when the installed version
+supports line-number reporting.
 
 ## Quarto example
 
@@ -75,7 +77,6 @@ cited by the checked manuscript.
 - Check one manuscript file at a time.
 - Pass one BibTeX file at a time.
 - Pass manuscript and BibTeX paths explicitly.
-- Diagnostics do not include line numbers yet.
 
 These limitations are tracked in open issues and should improve in later
 releases.

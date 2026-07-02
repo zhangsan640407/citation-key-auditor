@@ -24,6 +24,7 @@ This tool catches those mismatches early and returns a clear exit code for CI.
 - Detects common LaTeX citation commands such as `\cite{smith2024}`.
 - Reads BibTeX keys from `.bib` files.
 - Reports missing and unused citation keys.
+- Shows line numbers for missing citation keys.
 - Supports text and JSON output.
 - Has no runtime dependencies.
 
