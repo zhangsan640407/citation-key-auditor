@@ -4,6 +4,7 @@ from citation_key_auditor.core import (
     audit_citations,
     extract_bibtex_keys,
     extract_citation_keys,
+    extract_citation_locations,
 )
 
 
@@ -17,6 +18,34 @@ class CitationExtractionTests(unittest.TestCase):
         text = r"These results follow \citep[see][12]{smith2024, lee2023}."
 
         self.assertEqual(extract_citation_keys(text), {"smith2024", "lee2023"})
+
+    def test_extracts_markdown_key_locations(self):
+        text = "\n".join(
+            [
+                "Opening paragraph.",
+                "Prior work shows this [@smith2024; @lee-2023].",
+                "The same source appears again [@smith2024].",
+            ]
+        )
+
+        self.assertEqual(
+            extract_citation_locations(text),
+            {"lee-2023": (2,), "smith2024": (2, 3)},
+        )
+
+    def test_extracts_latex_key_locations(self):
+        text = "\n".join(
+            [
+                r"These results follow \citep[see][12]{smith2024, lee2023}.",
+                "A plain sentence.",
+                r"A second command uses \cite{smith2024}.",
+            ]
+        )
+
+        self.assertEqual(
+            extract_citation_locations(text),
+            {"lee2023": (1,), "smith2024": (1, 3)},
+        )
 
     def test_extracts_bibtex_keys(self):
         bibtex = """
@@ -47,6 +76,7 @@ class AuditTests(unittest.TestCase):
 
         self.assertEqual(result.missing_keys, {"missing2025"})
         self.assertEqual(result.unused_keys, {"unused2022"})
+        self.assertEqual(result.citation_locations["missing2025"], (1,))
 
 
 if __name__ == "__main__":

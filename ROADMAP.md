@@ -11,7 +11,8 @@
 ## 0.2
 
 - Support Quarto examples in documentation.
-- Add better diagnostics with file and line numbers.
+- Add better diagnostics with citation line numbers.
+- Add file-aware diagnostics after multi-file support lands.
 - Add `--ignore-unused` and config-file support.
 - Add more tests for natbib and biblatex commands.
 
@@ -26,4 +27,4 @@
 
 - Whether CSL JSON should be supported directly.
 - Whether unused-key checks should default to warnings forever.
-- Whether line-number reporting should use a parser or a lightweight scanner.
+- Whether future file-aware diagnostics should use a parser or a lightweight scanner.

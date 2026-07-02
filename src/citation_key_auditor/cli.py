@@ -25,8 +25,27 @@ def _as_json(result: AuditResult) -> str:
         "bibtex_keys": sorted(result.bibtex_keys),
         "missing_keys": sorted(result.missing_keys),
         "unused_keys": sorted(result.unused_keys),
+        "citation_locations": _locations_payload(result.citation_locations),
+        "missing_key_locations": _locations_payload(
+            {
+                key: result.citation_locations.get(key, ())
+                for key in sorted(result.missing_keys)
+            }
+        ),
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)
+
+
+def _locations_payload(locations: dict[str, tuple[int, ...]]) -> dict[str, list[int]]:
+    return {key: list(lines) for key, lines in sorted(locations.items())}
+
+
+def _format_line_numbers(lines: tuple[int, ...]) -> str:
+    if not lines:
+        return "line unknown"
+    if len(lines) == 1:
+        return f"line {lines[0]}"
+    return "lines " + ", ".join(str(line) for line in lines)
 
 
 def _as_text(result: AuditResult) -> str:
@@ -41,7 +60,10 @@ def _as_text(result: AuditResult) -> str:
     if result.missing_keys:
         lines.append("")
         lines.append("Missing keys")
-        lines.extend(f"- {key}" for key in sorted(result.missing_keys))
+        lines.extend(
+            f"- {key} ({_format_line_numbers(result.citation_locations.get(key, ()))})"
+            for key in sorted(result.missing_keys)
+        )
 
     if result.unused_keys:
         lines.append("")
