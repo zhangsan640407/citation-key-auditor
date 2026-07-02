@@ -57,6 +57,9 @@ citation-key-audit check examples\quarto-paper.qmd examples\references.bib
 
 For Quarto-specific notes, see [docs/QUARTO.md](docs/QUARTO.md).
 
+To run the auditor in another repository with GitHub Actions, see
+[docs/GITHUB_ACTIONS.md](docs/GITHUB_ACTIONS.md).
+
 Return JSON:
 
 ```powershell
