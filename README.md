@@ -132,6 +132,9 @@ is a stable citation-key checker for Markdown and LaTeX workflows. See
 For a realistic open-source maintenance plan, see
 [docs/OPEN_SOURCE_MAINTAINER_PLAN.md](docs/OPEN_SOURCE_MAINTAINER_PLAN.md).
 
+Privacy-preserving checks with real academic data are recorded in
+[docs/VALIDATION.md](docs/VALIDATION.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
