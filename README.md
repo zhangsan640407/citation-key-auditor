@@ -49,6 +49,14 @@ Try the included example:
 citation-key-audit check examples\manuscript.md examples\references.bib
 ```
 
+Check a Quarto manuscript in the same way:
+
+```powershell
+citation-key-audit check examples\quarto-paper.qmd examples\references.bib
+```
+
+For Quarto-specific notes, see [docs/QUARTO.md](docs/QUARTO.md).
+
 Return JSON:
 
 ```powershell

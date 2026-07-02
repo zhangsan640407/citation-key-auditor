@@ -1,0 +1,18 @@
+---
+title: "Example Quarto manuscript"
+format: html
+bibliography: references.bib
+---
+
+# Introduction
+
+Reliable academic writing workflows should catch citation-key mistakes before a
+paper is submitted [@smith2024].
+
+Quarto uses Pandoc citation syntax, including grouped citations such as
+[@lee2023; @garcia2022].
+
+# Notes
+
+This example is intentionally small. It is meant to show that `.qmd` files can
+be checked as plain text with the same command used for Markdown manuscripts.
