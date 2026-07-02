@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install "git+https://github.com/zhangsan640407/citation-key-auditor.git@v0.1.0"
+      - run: python -m pip install "git+https://github.com/zhangsan640407/citation-key-auditor.git@v0.2.0"
       - run: citation-key-audit check manuscript.md references.bib
 ```
 
