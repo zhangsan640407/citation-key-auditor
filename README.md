@@ -43,6 +43,12 @@ Check a manuscript against a BibTeX file:
 citation-key-audit check manuscript.md references.bib
 ```
 
+Try the included example:
+
+```powershell
+citation-key-audit check examples\manuscript.md examples\references.bib
+```
+
 Return JSON:
 
 ```powershell
@@ -85,6 +91,9 @@ python -m unittest discover -s tests
 This repository is intentionally small and practical. The first public milestone
 is a stable citation-key checker for Markdown and LaTeX workflows. See
 [ROADMAP.md](ROADMAP.md) for planned work.
+
+For a realistic open-source maintenance plan, see
+[docs/OPEN_SOURCE_MAINTAINER_PLAN.md](docs/OPEN_SOURCE_MAINTAINER_PLAN.md).
 
 ## License
 
