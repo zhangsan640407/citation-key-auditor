@@ -25,6 +25,7 @@ This tool catches those mismatches early and returns a clear exit code for CI.
 - Reads BibTeX keys from `.bib` files.
 - Reports missing and unused citation keys.
 - Shows line numbers for missing citation keys.
+- Checks one or more manuscript files in one command.
 - Supports text and JSON output.
 - Has no runtime dependencies.
 
@@ -42,6 +43,12 @@ Check a manuscript against a BibTeX file:
 
 ```powershell
 citation-key-audit check manuscript.md references.bib
+```
+
+Check multiple manuscript files against one BibTeX file:
+
+```powershell
+citation-key-audit check intro.md methods.md results.md references.bib
 ```
 
 Try the included example:

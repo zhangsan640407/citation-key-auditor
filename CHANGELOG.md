@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added support for checking multiple manuscript files in one command.
+- Added file-aware citation source metadata for JSON output.
+- Added file-aware missing-key diagnostics for multi-file text output.
+
 ## 0.2.0
 
 - Added Quarto usage documentation and a runnable `.qmd` example.

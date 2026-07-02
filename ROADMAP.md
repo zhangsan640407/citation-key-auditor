@@ -12,15 +12,14 @@
 
 - Support Quarto examples in documentation.
 - Add better diagnostics with citation line numbers.
-- Add file-aware diagnostics after multi-file support lands.
 - Add `--ignore-unused` and config-file support.
 - Add more tests for natbib and biblatex commands.
 
 ## 0.3
 
-- Support multiple manuscript files.
 - Support multiple BibTeX files.
-- Add GitHub Action usage examples.
+- Add `--ignore-unused` and config-file support.
+- Add more tests for natbib and biblatex commands.
 - Publish package metadata for PyPI.
 
 ## Open questions

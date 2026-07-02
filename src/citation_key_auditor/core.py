@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 import re
 
@@ -21,6 +22,14 @@ LATEX_CITE_RE = re.compile(
 BIBTEX_KEY_RE = re.compile(r"@\s*[A-Za-z]+\s*[{(]\s*([^,\s]+)\s*,")
 
 
+@dataclass(frozen=True, order=True)
+class CitationSource:
+    """File and line where a citation key appears."""
+
+    path: str
+    line: int
+
+
 @dataclass(frozen=True)
 class AuditResult:
     """Result of comparing cited keys with BibTeX keys."""
@@ -30,6 +39,9 @@ class AuditResult:
     missing_keys: set[str]
     unused_keys: set[str]
     citation_locations: dict[str, tuple[int, ...]] = field(default_factory=dict)
+    citation_sources: dict[str, tuple[CitationSource, ...]] = field(
+        default_factory=dict
+    )
 
     @property
     def has_missing(self) -> bool:
@@ -90,10 +102,39 @@ def extract_bibtex_keys(text: str) -> set[str]:
     return set(BIBTEX_KEY_RE.findall(text))
 
 
-def audit_citations(manuscript_text: str, bibtex_text: str) -> AuditResult:
+def audit_citations(
+    manuscript_text: str, bibtex_text: str, source_name: str | None = None
+) -> AuditResult:
     """Compare cited keys in a manuscript with entries in a BibTeX file."""
 
     citation_locations = extract_citation_locations(manuscript_text)
+    cited_keys = set(citation_locations)
+    bibtex_keys = extract_bibtex_keys(bibtex_text)
+    citation_sources = _build_citation_sources(citation_locations, source_name)
+    return AuditResult(
+        cited_keys=cited_keys,
+        bibtex_keys=bibtex_keys,
+        missing_keys=cited_keys - bibtex_keys,
+        unused_keys=bibtex_keys - cited_keys,
+        citation_locations=citation_locations,
+        citation_sources=citation_sources,
+    )
+
+
+def audit_manuscripts(manuscripts: Mapping[str, str], bibtex_text: str) -> AuditResult:
+    """Compare cited keys from one or more manuscripts with BibTeX entries."""
+
+    citation_locations: dict[str, set[int]] = {}
+    citation_sources: dict[str, set[CitationSource]] = {}
+
+    for source_name, manuscript_text in manuscripts.items():
+        source_locations = extract_citation_locations(manuscript_text)
+        for key, lines in source_locations.items():
+            citation_locations.setdefault(key, set()).update(lines)
+            citation_sources.setdefault(key, set()).update(
+                CitationSource(source_name, line) for line in lines
+            )
+
     cited_keys = set(citation_locations)
     bibtex_keys = extract_bibtex_keys(bibtex_text)
     return AuditResult(
@@ -101,5 +142,23 @@ def audit_citations(manuscript_text: str, bibtex_text: str) -> AuditResult:
         bibtex_keys=bibtex_keys,
         missing_keys=cited_keys - bibtex_keys,
         unused_keys=bibtex_keys - cited_keys,
-        citation_locations=citation_locations,
+        citation_locations={
+            key: tuple(sorted(lines)) for key, lines in sorted(citation_locations.items())
+        },
+        citation_sources={
+            key: tuple(sorted(sources))
+            for key, sources in sorted(citation_sources.items())
+        },
     )
+
+
+def _build_citation_sources(
+    citation_locations: dict[str, tuple[int, ...]], source_name: str | None
+) -> dict[str, tuple[CitationSource, ...]]:
+    if source_name is None:
+        return {}
+
+    return {
+        key: tuple(CitationSource(source_name, line) for line in lines)
+        for key, lines in citation_locations.items()
+    }

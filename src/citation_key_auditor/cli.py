@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import sys
 
-from .core import AuditResult, audit_citations
+from .core import AuditResult, CitationSource, audit_manuscripts
 
 
 def _read_text(path: Path) -> str:
@@ -32,6 +32,13 @@ def _as_json(result: AuditResult) -> str:
                 for key in sorted(result.missing_keys)
             }
         ),
+        "citation_sources": _sources_payload(result.citation_sources),
+        "missing_key_sources": _sources_payload(
+            {
+                key: result.citation_sources.get(key, ())
+                for key in sorted(result.missing_keys)
+            }
+        ),
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
@@ -48,7 +55,31 @@ def _format_line_numbers(lines: tuple[int, ...]) -> str:
     return "lines " + ", ".join(str(line) for line in lines)
 
 
-def _as_text(result: AuditResult) -> str:
+def _sources_payload(
+    sources: dict[str, tuple[CitationSource, ...]]
+) -> dict[str, list[dict[str, int | str]]]:
+    return {
+        key: [{"file": source.path, "line": source.line} for source in source_values]
+        for key, source_values in sorted(sources.items())
+    }
+
+
+def _format_source_locations(sources: tuple[CitationSource, ...]) -> str:
+    if not sources:
+        return "source unknown"
+
+    grouped: dict[str, list[int]] = {}
+    for source in sources:
+        grouped.setdefault(source.path, []).append(source.line)
+
+    parts = []
+    for path, lines in sorted(grouped.items()):
+        formatted_lines = ", ".join(str(line) for line in sorted(set(lines)))
+        parts.append(f"{path}:{formatted_lines}")
+    return ", ".join(parts)
+
+
+def _as_text(result: AuditResult, show_source_names: bool = False) -> str:
     lines = [
         "Citation Key Auditor",
         f"Cited keys: {len(result.cited_keys)}",
@@ -61,7 +92,7 @@ def _as_text(result: AuditResult) -> str:
         lines.append("")
         lines.append("Missing keys")
         lines.extend(
-            f"- {key} ({_format_line_numbers(result.citation_locations.get(key, ()))})"
+            _format_missing_key_line(result, key, show_source_names)
             for key in sorted(result.missing_keys)
         )
 
@@ -73,6 +104,16 @@ def _as_text(result: AuditResult) -> str:
     return "\n".join(lines)
 
 
+def _format_missing_key_line(
+    result: AuditResult, key: str, show_source_names: bool
+) -> str:
+    if show_source_names:
+        source_locations = _format_source_locations(result.citation_sources.get(key, ()))
+        return f"- {key} ({source_locations})"
+
+    return f"- {key} ({_format_line_numbers(result.citation_locations.get(key, ()))})"
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="citation-key-audit",
@@ -82,10 +123,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     check_parser = subparsers.add_parser(
         "check",
-        help="compare a Markdown or LaTeX manuscript with a BibTeX file",
+        help="compare Markdown or LaTeX manuscripts with a BibTeX file",
     )
-    check_parser.add_argument("manuscript", type=Path)
-    check_parser.add_argument("bibtex", type=Path)
+    check_parser.add_argument(
+        "paths",
+        metavar="path",
+        type=Path,
+        nargs="+",
+        help="one or more manuscript paths followed by a BibTeX path",
+    )
     check_parser.add_argument(
         "--json",
         action="store_true",
@@ -104,11 +150,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "check":
-        manuscript_text = _read_text(args.manuscript)
-        bibtex_text = _read_text(args.bibtex)
-        result = audit_citations(manuscript_text, bibtex_text)
+        if len(args.paths) < 2:
+            parser.error("check requires at least one manuscript path and one BibTeX path")
 
-        output = _as_json(result) if args.json else _as_text(result)
+        manuscript_paths = args.paths[:-1]
+        bibtex_path = args.paths[-1]
+        manuscripts = {str(path): _read_text(path) for path in manuscript_paths}
+        bibtex_text = _read_text(bibtex_path)
+        result = audit_manuscripts(manuscripts, bibtex_text)
+
+        output = (
+            _as_json(result)
+            if args.json
+            else _as_text(result, show_source_names=len(manuscript_paths) > 1)
+        )
         print(output)
 
         if result.has_missing or (args.fail_on_unused and result.has_unused):
