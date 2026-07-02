@@ -2,6 +2,7 @@ import unittest
 
 from citation_key_auditor.core import (
     audit_citations,
+    audit_manuscripts,
     extract_bibtex_keys,
     extract_citation_keys,
     extract_citation_locations,
@@ -77,6 +78,28 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(result.missing_keys, {"missing2025"})
         self.assertEqual(result.unused_keys, {"unused2022"})
         self.assertEqual(result.citation_locations["missing2025"], (1,))
+
+    def test_reports_sources_for_multiple_manuscripts(self):
+        manuscripts = {
+            "intro.md": "Known claim [@smith2024].\nMissing claim [@missing2025].",
+            "results.md": r"Repeated missing claim \cite{missing2025}.",
+        }
+        bibtex = """
+        @article{smith2024,
+          title = {Known paper}
+        }
+        """
+
+        result = audit_manuscripts(manuscripts, bibtex)
+
+        self.assertEqual(result.missing_keys, {"missing2025"})
+        self.assertEqual(
+            [
+                (source.path, source.line)
+                for source in result.citation_sources["missing2025"]
+            ],
+            [("intro.md", 2), ("results.md", 1)],
+        )
 
 
 if __name__ == "__main__":

@@ -17,6 +17,12 @@ Check a Quarto manuscript against a BibTeX file:
 citation-key-audit check paper.qmd references.bib
 ```
 
+Check a split Quarto project by passing each `.qmd` file before the BibTeX file:
+
+```powershell
+citation-key-audit check index.qmd methods.qmd results.qmd references.bib
+```
+
 Run the included example:
 
 ```powershell
@@ -50,8 +56,7 @@ Missing keys include the source line numbers where they were cited.
 
 - The tool does not render Quarto documents.
 - The tool does not automatically read the `bibliography` field from YAML.
-- Pass the `.qmd` file and `.bib` file explicitly.
-- Multi-file manuscript projects are not supported yet.
+- Pass `.qmd` files and the `.bib` file explicitly.
 - Multiple BibTeX files are not supported yet.
 
 These limitations are tracked in open issues so they can be improved without

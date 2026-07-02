@@ -35,8 +35,14 @@ jobs:
 
 The final step returns a non-zero exit code when cited keys are missing from the
 BibTeX file, so the GitHub Actions job fails. Missing-key diagnostics include
-the manuscript line numbers where the keys were cited when the installed version
-supports line-number reporting.
+the manuscript line numbers where the keys were cited.
+
+For versions that include multi-file support, pass each manuscript file before
+the BibTeX file. Multi-file diagnostics include both file names and line numbers:
+
+```yaml
+- run: citation-key-audit check intro.md methods.md results.md references.bib
+```
 
 ## Quarto example
 
@@ -44,6 +50,12 @@ For a Quarto manuscript, pass the `.qmd` file explicitly:
 
 ```yaml
 - run: citation-key-audit check paper.qmd references.bib
+```
+
+For a split Quarto project, pass each checked source file before the BibTeX file:
+
+```yaml
+- run: citation-key-audit check index.qmd methods.qmd results.qmd references.bib
 ```
 
 The tool reads citation syntax from the `.qmd` source file. It does not render
@@ -74,9 +86,8 @@ cited by the checked manuscript.
 
 ## Current limitations
 
-- Check one manuscript file at a time.
 - Pass one BibTeX file at a time.
-- Pass manuscript and BibTeX paths explicitly.
+- Pass manuscript paths and the BibTeX path explicitly.
 
 These limitations are tracked in open issues and should improve in later
 releases.
