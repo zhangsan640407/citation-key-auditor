@@ -17,7 +17,11 @@
 
 ## 0.3
 
+- Support multiple manuscript files.
 - Support multiple BibTeX files.
+
+## 0.4
+
 - Add `--ignore-unused` and config-file support.
 - Add more tests for natbib and biblatex commands.
 - Publish package metadata for PyPI.

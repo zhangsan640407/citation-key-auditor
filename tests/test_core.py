@@ -3,6 +3,7 @@ import unittest
 from citation_key_auditor.core import (
     audit_citations,
     audit_manuscripts,
+    audit_project,
     extract_bibtex_keys,
     extract_citation_keys,
     extract_citation_locations,
@@ -99,6 +100,31 @@ class AuditTests(unittest.TestCase):
                 for source in result.citation_sources["missing2025"]
             ],
             [("intro.md", 2), ("results.md", 1)],
+        )
+
+    def test_merges_multiple_bibtex_files_and_reports_duplicates(self):
+        manuscripts = {
+            "paper.qmd": "First [@primary2024]. Second [@software2023]."
+        }
+        bibtex_files = {
+            "primary.bib": (
+                "@article{primary2024,title={Primary}}\n"
+                "@article{shared2022,title={Shared primary}}"
+            ),
+            "software.bib": (
+                "@software{software2023,title={Software}}\n"
+                "@article{shared2022,title={Shared software}}"
+            ),
+        }
+
+        result = audit_project(manuscripts, bibtex_files)
+
+        self.assertEqual(result.missing_keys, set())
+        self.assertEqual(result.bibtex_keys, {"primary2024", "software2023", "shared2022"})
+        self.assertEqual(result.duplicate_bibtex_keys, {"shared2022"})
+        self.assertEqual(
+            result.bibtex_sources["shared2022"],
+            ("primary.bib", "software.bib"),
         )
 
 

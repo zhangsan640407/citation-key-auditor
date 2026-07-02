@@ -44,6 +44,19 @@ the BibTeX file. Multi-file diagnostics include both file names and line numbers
 - run: citation-key-audit check intro.md methods.md results.md references.bib
 ```
 
+Starting with `v0.3.0`, repeat `--bibtex` to merge references from multiple
+BibTeX files:
+
+```yaml
+- run: >-
+    citation-key-audit check intro.md methods.md results.md
+    --bibtex primary.bib
+    --bibtex software.bib
+```
+
+Duplicate keys across BibTeX files are reported with their source file names.
+They are warnings and do not fail the job.
+
 ## Quarto example
 
 For a Quarto manuscript, pass the `.qmd` file explicitly:
@@ -86,8 +99,8 @@ cited by the checked manuscript.
 
 ## Current limitations
 
-- Pass one BibTeX file at a time.
 - Pass manuscript paths and the BibTeX path explicitly.
+- Quarto bibliography paths are not read automatically from YAML metadata.
 
 These limitations are tracked in open issues and should improve in later
 releases.
