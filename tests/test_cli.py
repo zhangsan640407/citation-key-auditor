@@ -9,6 +9,15 @@ from citation_key_auditor.cli import main
 
 
 class CliTests(unittest.TestCase):
+    def test_check_requires_a_bibtex_path(self):
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as context:
+                main(["check", "paper.md"])
+
+        self.assertEqual(context.exception.code, 2)
+        self.assertIn("requires at least one manuscript path", stderr.getvalue())
+
     def test_check_returns_success_when_all_citations_exist(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -154,6 +163,122 @@ class CliTests(unittest.TestCase):
                         {"file": str(results), "line": 2},
                     ]
                 },
+            )
+
+    def test_check_accepts_multiple_manuscripts_and_bibtex_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            intro = tmp_path / "intro.qmd"
+            results = tmp_path / "results.qmd"
+            primary = tmp_path / "primary.bib"
+            software = tmp_path / "software.bib"
+            intro.write_text(
+                "First [@primary2024].\n",
+                encoding="utf-8",
+            )
+            results.write_text(
+                "Second [@software2023].\n",
+                encoding="utf-8",
+            )
+            primary.write_text(
+                "@article{primary2024,title={Primary}}",
+                encoding="utf-8",
+            )
+            software.write_text(
+                "@software{software2023,title={Software}}",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "check",
+                        str(intro),
+                        str(results),
+                        "--bibtex",
+                        str(primary),
+                        "--bibtex",
+                        str(software),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertIn("BibTeX keys: 2", stdout.getvalue())
+            self.assertIn("Missing keys: 0", stdout.getvalue())
+
+    def test_duplicate_bibtex_keys_are_reported_without_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            manuscript = tmp_path / "paper.md"
+            first = tmp_path / "first.bib"
+            second = tmp_path / "second.bib"
+            manuscript.write_text("Known [@shared2024].", encoding="utf-8")
+            first.write_text(
+                "@article{shared2024,title={First}}",
+                encoding="utf-8",
+            )
+            second.write_text(
+                "@article{shared2024,title={Second}}",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "check",
+                        str(manuscript),
+                        "--bibtex",
+                        str(first),
+                        "--bibtex",
+                        str(second),
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            output = stdout.getvalue()
+            self.assertIn("Duplicate BibTeX keys: 1", output)
+            self.assertIn("shared2024", output)
+            self.assertIn(str(first), output)
+            self.assertIn(str(second), output)
+
+    def test_json_output_includes_duplicate_bibtex_sources(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            manuscript = tmp_path / "paper.md"
+            first = tmp_path / "first.bib"
+            second = tmp_path / "second.bib"
+            manuscript.write_text("Known [@shared2024].", encoding="utf-8")
+            first.write_text(
+                "@article{shared2024,title={First}}",
+                encoding="utf-8",
+            )
+            second.write_text(
+                "@article{shared2024,title={Second}}",
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                exit_code = main(
+                    [
+                        "check",
+                        str(manuscript),
+                        "--bibtex",
+                        str(first),
+                        "--bibtex",
+                        str(second),
+                        "--json",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            payload = json.loads(stdout.getvalue())
+            self.assertEqual(payload["duplicate_bibtex_keys"], ["shared2024"])
+            self.assertEqual(
+                payload["bibtex_sources"]["shared2024"],
+                [str(first), str(second)],
             )
 
 

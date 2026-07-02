@@ -42,6 +42,8 @@ class AuditResult:
     citation_sources: dict[str, tuple[CitationSource, ...]] = field(
         default_factory=dict
     )
+    bibtex_sources: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    duplicate_bibtex_keys: set[str] = field(default_factory=set)
 
     @property
     def has_missing(self) -> bool:
@@ -124,6 +126,14 @@ def audit_citations(
 def audit_manuscripts(manuscripts: Mapping[str, str], bibtex_text: str) -> AuditResult:
     """Compare cited keys from one or more manuscripts with BibTeX entries."""
 
+    return audit_project(manuscripts, {"<bibtex>": bibtex_text})
+
+
+def audit_project(
+    manuscripts: Mapping[str, str], bibtex_files: Mapping[str, str]
+) -> AuditResult:
+    """Compare manuscripts with entries from one or more BibTeX files."""
+
     citation_locations: dict[str, set[int]] = {}
     citation_sources: dict[str, set[CitationSource]] = {}
 
@@ -135,8 +145,13 @@ def audit_manuscripts(manuscripts: Mapping[str, str], bibtex_text: str) -> Audit
                 CitationSource(source_name, line) for line in lines
             )
 
+    bibtex_sources: dict[str, set[str]] = {}
+    for source_name, bibtex_text in bibtex_files.items():
+        for key in extract_bibtex_keys(bibtex_text):
+            bibtex_sources.setdefault(key, set()).add(source_name)
+
     cited_keys = set(citation_locations)
-    bibtex_keys = extract_bibtex_keys(bibtex_text)
+    bibtex_keys = set(bibtex_sources)
     return AuditResult(
         cited_keys=cited_keys,
         bibtex_keys=bibtex_keys,
@@ -148,6 +163,13 @@ def audit_manuscripts(manuscripts: Mapping[str, str], bibtex_text: str) -> Audit
         citation_sources={
             key: tuple(sorted(sources))
             for key, sources in sorted(citation_sources.items())
+        },
+        bibtex_sources={
+            key: tuple(sorted(sources))
+            for key, sources in sorted(bibtex_sources.items())
+        },
+        duplicate_bibtex_keys={
+            key for key, sources in bibtex_sources.items() if len(sources) > 1
         },
     )
 

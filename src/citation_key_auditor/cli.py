@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import sys
 
-from .core import AuditResult, CitationSource, audit_manuscripts
+from .core import AuditResult, CitationSource, audit_project
 
 
 def _read_text(path: Path) -> str:
@@ -39,6 +39,11 @@ def _as_json(result: AuditResult) -> str:
                 for key in sorted(result.missing_keys)
             }
         ),
+        "bibtex_sources": {
+            key: list(sources)
+            for key, sources in sorted(result.bibtex_sources.items())
+        },
+        "duplicate_bibtex_keys": sorted(result.duplicate_bibtex_keys),
     }
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
@@ -84,6 +89,7 @@ def _as_text(result: AuditResult, show_source_names: bool = False) -> str:
         "Citation Key Auditor",
         f"Cited keys: {len(result.cited_keys)}",
         f"BibTeX keys: {len(result.bibtex_keys)}",
+        f"Duplicate BibTeX keys: {len(result.duplicate_bibtex_keys)}",
         f"Missing keys: {len(result.missing_keys)}",
         f"Unused keys: {len(result.unused_keys)}",
     ]
@@ -100,6 +106,14 @@ def _as_text(result: AuditResult, show_source_names: bool = False) -> str:
         lines.append("")
         lines.append("Unused keys")
         lines.extend(f"- {key}" for key in sorted(result.unused_keys))
+
+    if result.duplicate_bibtex_keys:
+        lines.append("")
+        lines.append("Duplicate BibTeX keys")
+        lines.extend(
+            f"- {key} ({', '.join(result.bibtex_sources.get(key, ()))})"
+            for key in sorted(result.duplicate_bibtex_keys)
+        )
 
     return "\n".join(lines)
 
@@ -123,7 +137,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     check_parser = subparsers.add_parser(
         "check",
-        help="compare Markdown or LaTeX manuscripts with a BibTeX file",
+        help="compare Markdown or LaTeX manuscripts with BibTeX files",
     )
     check_parser.add_argument(
         "paths",
@@ -138,6 +152,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="print machine-readable JSON output",
     )
     check_parser.add_argument(
+        "--bibtex",
+        dest="bibtex_paths",
+        action="append",
+        type=Path,
+        metavar="path",
+        help=(
+            "BibTeX path; repeat for multiple files. When used, all positional "
+            "paths are manuscripts."
+        ),
+    )
+    check_parser.add_argument(
         "--fail-on-unused",
         action="store_true",
         help="return a non-zero exit code when unused BibTeX keys are found",
@@ -150,14 +175,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "check":
-        if len(args.paths) < 2:
-            parser.error("check requires at least one manuscript path and one BibTeX path")
+        if args.bibtex_paths:
+            manuscript_paths = args.paths
+            bibtex_paths = args.bibtex_paths
+        else:
+            if len(args.paths) < 2:
+                parser.error(
+                    "check requires at least one manuscript path and one BibTeX path"
+                )
+            manuscript_paths = args.paths[:-1]
+            bibtex_paths = [args.paths[-1]]
 
-        manuscript_paths = args.paths[:-1]
-        bibtex_path = args.paths[-1]
         manuscripts = {str(path): _read_text(path) for path in manuscript_paths}
-        bibtex_text = _read_text(bibtex_path)
-        result = audit_manuscripts(manuscripts, bibtex_text)
+        bibtex_files = {str(path): _read_text(path) for path in bibtex_paths}
+        result = audit_project(manuscripts, bibtex_files)
 
         output = (
             _as_json(result)
